@@ -1,8 +1,8 @@
 # Лабораторная работа по курсу "Техноогии программирования"
 # СИБ-501-О, Даргин Егор
-# Часть 1
+# Часть 2
 
-from random import randint
+from random import choice
 
 
 # Класс игрока
@@ -31,7 +31,7 @@ def session():
             except :
                 print("No such check! Be careful, " + player.name + "...\nTry again: ")
                 continue
-        b = ai.move(ai.checks[randint(0, len(ai.checks)-1)])
+        b = ai.move(choice(ai.checks))
         # print("DEBUG: ai.checks = " + str(ai.checks))
         if a > b:
             player.score += (a+b)
