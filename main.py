@@ -1,5 +1,6 @@
 # Лабораторная работа по курсу "Техноогии программирования"
 # СИБ-501-О, Даргин Егор
+# Часть 1
 
 from random import randint
 
@@ -38,7 +39,7 @@ def session():
             ai.score += (a+b)
         print("Good job...\nYour checks: " + str(player.checks))
         # print("DEBUG: score =  " + str(player.score) + ":" + str(ai.score))
-    print("Game finished!")
+    print("Game finished!\nFinal score is " + str(player.score) + ":" + str(ai.score))
     if player.score > ai.score:
         print("Congratulations, " + player.name + "! You won... your freedom.")
     elif ai.score > player.score:
