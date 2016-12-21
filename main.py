@@ -13,10 +13,7 @@ class Player:
 
     # Совершить ход
     def move(self, check):
-        if check in self.checks:
-            return self.checks.pop(self.checks.index(check))
-        else:
-            return 0
+        return self.checks.pop(self.checks.index(check))
 
 
 # Одна игровая сессия
@@ -28,9 +25,11 @@ def session():
         a = 0
         print("Make a turn: ")
         while a == 0:
-            a = player.move(int(input()))
-            if a == 0:
+            try:
+                a = player.move(int(input()))
+            except :
                 print("No such check! Be careful, " + player.name + "...\nTry again: ")
+                continue
         b = ai.move(ai.checks[randint(0, len(ai.checks)-1)])
         # print("DEBUG: ai.checks = " + str(ai.checks))
         if a > b:
@@ -53,6 +52,9 @@ def main():
     while c == 0:
         session()
         print("Enter '0' to retry, any other key to exit...")
-        c = int(input())
+        try:
+            c = int(input())
+        except ValueError:
+            break
 
 main()
