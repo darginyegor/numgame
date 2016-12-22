@@ -3,8 +3,9 @@
 # Часть 2
 
 from random import randint, choice
-import sys
+import sys, json, time
 from PyQt5 import QtCore, QtWidgets, uic
+from PyQt5.QtWidgets import QMessageBox
 from gui import *
 
 
@@ -20,23 +21,32 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.ui_start.clicked.connect(self.start_game)
         self.ui.ui_player1_move.clicked.connect(self.move_1)
         self.ui.ui_player2_move.clicked.connect(self.move_2)
+        self.ui.ui_savestat.setDisabled(True)
+        self.ui.ui_savestat.clicked.connect(self.savestat)
+        self.ui.ui_showstat.clicked.connect(self.showstat)
+        self.stat = {}
 
     def start_game(self):
+        m = QMessageBox()
+        m.setWindowTitle("Ошибка")
         try:
             self.game = Game(int(self.ui.ui_check_count.text()))
             self.game.players[0].set_type(self.ui.ui_player1_type.currentIndex())
             self.game.players[1].set_type(self.ui.ui_player2_type.currentIndex())
-        except:
-            pass
+        except ValueError:
+            m.setText("Введите число от 2 до 100")
+            m.exec()
+            return
         else:
             self.ui.ui_start.setDisabled(True)
             self.ui.ui_log.append(self.game.start())
-            self.ui.ui_log.append(self.ui.ui_player1_type.currentText() + " vs " + self.ui.ui_player2_type.currentText())
+            self.ui.ui_log.append(
+                self.ui.ui_player1_type.currentText() + " vs " + self.ui.ui_player2_type.currentText())
             self.ui.ui_check_count.setDisabled(True)
             self.ui.ui_player1_type.setDisabled(True)
             self.ui.ui_player2_type.setDisabled(True)
-            self.ui.ui_player1_checks.addItems([str(i) for i in range(1, self.game.checks_count+1)])
-            self.ui.ui_player2_checks.addItems([str(i) for i in range(1, self.game.checks_count+1)])
+            self.ui.ui_player1_checks.addItems([str(i) for i in range(1, self.game.checks_count + 1)])
+            self.ui.ui_player2_checks.addItems([str(i) for i in range(1, self.game.checks_count + 1)])
             if self.game.players[0].type == 0:
                 self.ui.ui_player1_move.setEnabled(True)
                 self.ui.ui_player1_checks.setEnabled(True)
@@ -44,7 +54,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.move_1()
 
     def move_1(self):
-        print (int(self.ui.ui_player1_checks.currentText()))
+        print(int(self.ui.ui_player1_checks.currentText()))
         self.game.next_turn(0, int(self.ui.ui_player1_checks.currentText()), 1)
         self.ui.ui_player1_checks.removeItem(self.ui.ui_player1_checks.currentIndex())
         self.ui.ui_log.append("Игрок #1: ход фишкой " + str(self.game.temp))
@@ -75,7 +85,8 @@ class MainWindow(QtWidgets.QMainWindow):
             self.finish()
 
     def finish(self):
-        self.ui.ui_log.append("Игра завершена со счётом " + str(self.game.players[0].score) + " : " +  str(self.game.players[1].score))
+        self.ui.ui_log.append(
+            "Игра завершена со счётом " + str(self.game.players[0].score) + " : " + str(self.game.players[1].score))
         self.ui.ui_player1_checks.setDisabled(True)
         self.ui.ui_player1_move.setDisabled(True)
         self.ui.ui_player2_checks.setDisabled(True)
@@ -84,6 +95,76 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.ui_player1_type.setEnabled(True)
         self.ui.ui_player2_type.setEnabled(True)
         self.ui.ui_start.setEnabled(True)
+        self.stat = {
+            "id": int(time.time()),
+            "player1": self.game.players[0].type,
+            "player2": self.game.players[1].type,
+            "checks": self.game.checks_count,
+            "player1_score": self.game.players[0].score,
+            "player2_score": self.game.players[1].score,
+        }
+        self.ui.ui_savestat.setEnabled(True)
+
+
+    def savestat(self):
+        m = QMessageBox()
+        m.setWindowTitle(" ")
+        m.setText('Статистика сохранена')
+        try:
+            with open('stats.log', 'r') as f:
+                a = json.load(f)
+        except FileNotFoundError:
+            f = open('stats.log', 'w')
+            a = [self.stat]
+            json.dump(a, f, indent='\n', ensure_ascii=False)
+            m.exec()
+            self.ui.ui_savestat.setDisabled(True)
+            return
+        a.append(self.stat)
+        with open('stats.log', 'w') as f:
+            json.dump(a, f, indent='\n', ensure_ascii=False)
+            f.close()
+            m.exec()
+
+    def showstat(self):
+        m = QMessageBox()
+        m.setWindowTitle(" ")
+        try:
+            with open('stats.log', 'r') as f:
+                a = json.load(f)
+        except FileNotFoundError:
+            m.setText('Статистика пуста')
+            m.exec()
+            return
+        wins = self.winsstat(a)
+        scores = self.scorestat(a)
+        t = "Игр сохранено: " + str(len(a)) + "\n"
+        t += str(wins[0]) + " человеческих побед\n"
+        t += str(wins[1]) + " побед генератора\n"
+        t += str(wins[2]) + " побед тактика\n"
+        t += str(scores[0] + " очков у человеков\n")
+        t += str(scores[1] + " очков у генератора\n")
+        t += str(scores[2] + " очков у тактика\n")
+        m.setText(t)
+        m.exec()
+
+    def winsstat(self, a):
+        b = [0, 0, 0]
+        for i in a:
+            if i["player1_score"] > i["player2_score"]:
+                b[i["player1"]] += 1
+            elif i["player1_score"] < i["player2_score"]:
+                b[i["player2"]] += 1
+        return [str(i / len(a) * 100)[0:4] + "%" for i in b]
+
+    def scorestat(self, a):
+        score_total = 0
+        scores = [0, 0, 0]
+        for i in a:
+            score_total += sum(range(1, i["checks"]))
+            scores[i["player1"]] += i["player1_score"]
+            scores[i["player2"]] += i["player2_score"]
+        return [str(i / score_total * 100)[0:4] + "%" for i in scores]
 
 
 # Класс игрока
@@ -91,7 +172,7 @@ class Player:
     def __init__(self, i):
         # self.name = self.set_name()
         self.type = None
-        self.checks = {j+1: True for j in range(i)}
+        self.checks = {j + 1: True for j in range(i)}
         self.score = 0
 
     # Сеттер типа
@@ -115,7 +196,10 @@ class Player:
 
 class Game:
     def __init__(self, checks_count):
-        self.checks_count = checks_count
+        if 2 <= checks_count <= 100:
+            self.checks_count = checks_count
+        else:
+            raise ValueError()
         self.temp = 0
         print("Игрок №1")
         self.players = [Player(checks_count), Player(checks_count)]
@@ -134,9 +218,9 @@ class Game:
         elif len(self.players[0].unused()) == self.checks_count:
             a = randint(1, self.checks_count)  # Первый рандомный ход для компьютера-тактика
         else:
-            a = max(self.players[opp].unused())+1
+            a = max(self.players[opp].unused()) + 1
             print("Tactic move" + str(a))
-        for i in range(self.checks_count+1):
+        for i in range(self.checks_count + 1):
             try:
                 self.players[player].use(a)
                 break
@@ -167,5 +251,6 @@ def main():
     # a = int(input())
     # game = Game(a)
     # game.start()
+
 
 main()
