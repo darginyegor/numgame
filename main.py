@@ -9,7 +9,7 @@ from random import randint, choice
 class Player:
     def __init__(self, i):
         self.name = self.set_name()
-        self.is_user = self.set_type()
+        self.type = self.set_type()
         self.checks = {j+1: True for j in range(i)}
         self.score = 0
 
@@ -27,10 +27,10 @@ class Player:
     # Сеттер типа
     def set_type(self):
         a = 0
-        while a not in ['1', '2']:
-            print("Тип (1 -  пользователь, 2 - компьютер):")
+        while a not in ['1', '2', '3']:
+            print("Тип (1 -  пользователь, 2 - компьютер умный, 3 - компьютер с рандомом):")
             a = input()
-        return True if a == '1' else False
+        return int(a)
 
     # Совершить ход
     def use(self, check):
@@ -38,7 +38,7 @@ class Player:
             self.checks[check] = False
             return check
         else:
-            if self.is_user:
+            if self.type == 1:
                 print("Такую фишку использовать нельзя!")
             raise ValueError()
 
@@ -65,11 +65,13 @@ class Game:
     def next_turn(self):
 
         # Ход первого игрока
-        if self.player1.is_user:
+        if self.player1.type == 1:
             a = 0
             print(self.player1.name + " ходит: ")
             while a not in self.player1.unused():
                 a = int(input())
+        elif self.player1.type == 3:
+            a = choice(self.player1.checks)
         elif len(self.player1.checks) == self.checks_count:
             a = randint(1, self.checks_count)
         else:
@@ -87,12 +89,12 @@ class Game:
                 continue
 
         # Ход второго игрока
-        if self.player2.is_user:
+        if self.player2.type == 1:
             b = 0
             print(self.player2.name + " ходит: ")
             while b not in self.player2.unused():
                 b = int(input())
-        elif len(self.player1.unused()) == 0:
+        elif len(self.player1.unused()) == 0 or self.player2.type == 3:
             b = choice(self.player2.checks)
         else:
             b = max(self.player1.unused())+1
