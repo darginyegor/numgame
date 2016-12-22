@@ -35,7 +35,7 @@ def session():
         # print("DEBUG: ai.checks = " + str(ai.checks))
         if a > b:
             player.score += (a+b)
-        else:
+        elif a < b:
             ai.score += (a+b)
         print("Good job...\nYour checks: " + str(player.checks))
         # print("DEBUG: score =  " + str(player.score) + ":" + str(ai.score))
