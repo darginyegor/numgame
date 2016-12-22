@@ -38,7 +38,9 @@ class Player:
             self.checks[check] = False
             return check
         else:
-            raise ValueError("Фишка уже использована!")
+            if self.is_user:
+                print("Такую фишку использовать нельзя!")
+            raise ValueError()
 
     # Оставшиеся фишки
     def unused(self):
@@ -64,7 +66,10 @@ class Game:
 
         # Ход первого игрока
         if self.player1.is_user:
-            a = int(input())
+            a = 0
+            print(self.player1.name + " ходит: ")
+            while a not in self.player1.unused():
+                a = int(input())
         elif len(self.player1.checks) == self.checks_count:
             a = randint(1, self.checks_count)
         else:
@@ -83,7 +88,10 @@ class Game:
 
         # Ход второго игрока
         if self.player2.is_user:
-            b = int(input())
+            b = 0
+            print(self.player2.name + " ходит: ")
+            while b not in self.player2.unused():
+                b = int(input())
         elif len(self.player1.unused()) == 0:
             b = choice(self.player2.checks)
         else:
@@ -91,6 +99,7 @@ class Game:
         for i in range(self.checks_count+1):
             try:
                 self.player2.use(b)
+                print("<< " + self.player2.name + " ходит...")
                 break
             except KeyError:
                 b = 1
@@ -102,10 +111,10 @@ class Game:
         # Присвоение очков
         if a > b:
             self.player1.score += (a+b)
-            print(self.player1.name + " получает " + str(a+b) + " очков")
+            # print(self.player1.name + " получает " + str(a+b) + " очков")
         elif a < b:
             self.player2.score += (a+b)
-            print(self.player2.name + " получает " + str(a+b) + " очков")
+            # print(self.player2.name + " получает " + str(a+b) + " очков")
 
 
 def main():
